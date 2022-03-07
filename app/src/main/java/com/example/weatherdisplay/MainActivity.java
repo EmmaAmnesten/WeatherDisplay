@@ -19,6 +19,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,6 +33,12 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private int i = 1;
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+
+    double locLatitude;
+    double locLongitude;
+
+    FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
         Button refreshButton = (Button) findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(this.refreshOnCLickListener);
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
     View.OnClickListener refreshOnCLickListener = view -> {
@@ -55,12 +66,6 @@ public class MainActivity extends AppCompatActivity {
         thread.start();
     };
 
-    // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
-
-    // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private String GetLocationData() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -76,13 +81,16 @@ public class MainActivity extends AppCompatActivity {
             return "We need your location to give you weather";
         }
 
-//        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        LocationListener locationListener = new MyLocationListener();
-//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
 
-        return "We got the permissions";
-//        return "Longitude: " + location.getLongitude() + "\n" +
-//                "Latitude: " + location.getLatitude();
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+            if (location != null) {
+                locLatitude = location.getLatitude();
+                locLongitude = location.getLongitude();
+            }
+        });
+
+        return "Longitude: " + locLatitude + "\n" +
+                "Latitude: " + locLongitude;
 
     }
 
@@ -95,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
-            StringBuffer response = new StringBuffer();
+            StringBuilder response = new StringBuilder();
             String inputLine;
             while ((inputLine = bufferedReader.readLine()) != null) {
                 response.append(inputLine);
