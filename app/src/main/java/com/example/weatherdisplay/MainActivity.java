@@ -1,38 +1,31 @@
 package com.example.weatherdisplay;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.CancellationToken;
+import com.google.android.gms.tasks.OnTokenCanceledListener;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
     private int i = 1;
+
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     double locLatitude;
@@ -49,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         refreshButton.setOnClickListener(this.refreshOnCLickListener);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
     }
 
     View.OnClickListener refreshOnCLickListener = view -> {
@@ -81,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
             return "We need your location to give you weather";
         }
 
-
         mFusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
             if (location != null) {
                 locLatitude = location.getLatitude();
@@ -89,10 +82,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        if (locLatitude == 0 || locLongitude == 0) {
+            mFusedLocationClient.getCurrentLocation(100, cancellationToken)
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        locLatitude = location.getLatitude();
+                        locLongitude = location.getLongitude();
+                    }
+                });
+        }
+
         return "Longitude: " + locLatitude + "\n" +
                 "Latitude: " + locLongitude;
-
     }
+
+    CancellationToken cancellationToken = new CancellationToken() {
+        @Override
+        public boolean isCancellationRequested() {
+            return false;
+        }
+
+        @Override
+        public CancellationToken onCanceledRequested(@NonNull OnTokenCanceledListener onTokenCanceledListener) {
+            return null;
+        }
+    };
 
     private String MakeRequest(String method, String uri) {
         try {
