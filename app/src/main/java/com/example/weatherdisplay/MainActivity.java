@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        HideStatusAndActionBar();
+
         FloatingActionButton refreshButton = (FloatingActionButton) findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(this.refreshOnCLickListener);
 
@@ -55,6 +58,14 @@ public class MainActivity extends AppCompatActivity {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+    }
+
+    private void HideStatusAndActionBar() {
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.hide();
     }
 
     View.OnClickListener refreshOnCLickListener = view -> {
