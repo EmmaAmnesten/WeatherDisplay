@@ -2,10 +2,13 @@ package com.example.weatherdisplay;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,7 +20,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.CancellationToken;
 import com.google.android.gms.tasks.OnTokenCanceledListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
@@ -55,9 +57,41 @@ public class MainActivity extends AppCompatActivity {
         locLatitude = 0;
         locLongitude = 0;
 
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        GenerateWeatherColumns();
+    }
+
+    private void GenerateWeatherColumns() {
+        // Make columns
+        LinearLayout weatherColumns = (LinearLayout) findViewById(R.id.WeatherColumns);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.widthPixels;
+        int height = displayMetrics.heightPixels;
+
+        int[] colors = new int[] {
+                Color.argb(255, 0, 0, 125),
+                Color.argb(255, 0, 0, 150),
+                Color.argb(255, 0, 0, 175),
+                Color.argb(255, 0, 0, 200),
+                Color.argb(255, 0, 0, 225),
+                Color.argb(255, 0, 0, 250),
+                Color.argb(255, 50, 50, 250),
+                Color.argb(255, 100, 100, 250),
+                Color.argb(255, 150, 150, 250),
+                Color.argb(255, 200, 200, 250),
+        };
+        int noColumns = 10;
+        for (int i = 0; i < noColumns; i++) {
+            TextView view = new TextView(this);
+            view.setBackgroundColor(colors[i]);
+            view.setLayoutParams(new LinearLayout.LayoutParams(width/noColumns, LinearLayout.LayoutParams.MATCH_PARENT));
+            view.setText(i + "C");
+            view.setGravity(Gravity.CENTER_HORIZONTAL);
+            view.setPadding(0, height/(noColumns+1)*(noColumns-i), 0, 0);
+            weatherColumns.addView(view);
+        }
     }
 
     private void HideStatusAndActionBar() {

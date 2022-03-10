@@ -7,15 +7,13 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity" >
 
-    <ImageButton
-        android:id="@+id/locationButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@android:drawable/ic_menu_mylocation"
-        android:text="Get location"
+    <LinearLayout
+        android:id="@+id/WeatherColumns"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -41,4 +39,17 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@android:drawable/stat_notify_sync" />
+
+    <ImageButton
+        android:id="@+id/locationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@android:drawable/ic_menu_mylocation"
+        android:text="Get location"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
