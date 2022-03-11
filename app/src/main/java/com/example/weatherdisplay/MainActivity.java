@@ -86,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
                     "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=" + locLatitude +
                             "&lon=" + locLongitude);
 
-            ArrayList<WeatherPoint> weatherPoints = parseTemperatures(response);
-
+            //ArrayList<WeatherPoint> weatherPoints = parseTemperatures(response);
+            ArrayList<WeatherPoint> weatherPoints = GetTestWeatherPoints();
             runOnUiThread(() -> {
                 generateWeatherColumns(weatherPoints);
             });
@@ -208,5 +208,13 @@ public class MainActivity extends AppCompatActivity {
 
         }
         return stringBuilder.toString();
+    }
+
+    private ArrayList<WeatherPoint> GetTestWeatherPoints() {
+        ArrayList<WeatherPoint> weatherPoints = new ArrayList<WeatherPoint>();
+        for (int i = 0; i < noWeatherPoints; i++) {
+            weatherPoints.add(new WeatherPoint(this, String.valueOf(i), i));
+        }
+        return weatherPoints;
     }
 }
