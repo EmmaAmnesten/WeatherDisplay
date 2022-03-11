@@ -2,17 +2,12 @@ package com.example.weatherdisplay;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -35,12 +30,20 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    static int noWeatherPoints = 30;
     private int i = 1;
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
-    double locLatitude;
-    double locLongitude;
+    LinearLayout weatherColumns;
+    static int noColumnsInOneScreen = 30;
+
+    static int screenWidth;
+    static int screenHeight;
+    static int edgePadding; // Padding at the top and bottom of the screen
+
+    double locLatitude = 0;
+    double locLongitude = 0;
 
     FusedLocationProviderClient mFusedLocationClient;
 
@@ -49,117 +52,48 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        HideStatusAndActionBar();
-
+        weatherColumns = (LinearLayout) findViewById(R.id.WeatherColumns);
         FloatingActionButton refreshButton = (FloatingActionButton) findViewById(R.id.refreshButton);
-        refreshButton.setOnClickListener(this.refreshOnCLickListener);
+        refreshButton.setOnClickListener(view -> {
+            refreshWeatherData(); } );
 
-        locLatitude = 0;
-        locLongitude = 0;
+        calculateAllDistances();
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        GenerateWeatherColumns();
+        refreshWeatherData();
     }
 
-    private void GenerateWeatherColumns() {
-        // Make columns
-        LinearLayout weatherColumns = (LinearLayout) findViewById(R.id.WeatherColumns);
+    private void calculateAllDistances() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int width = displayMetrics.widthPixels;
-        int height = displayMetrics.heightPixels;
-
-        int[] colors = new int[] {
-                Color.argb(255, 0, 0, 125),
-                Color.argb(255, 0, 0, 150),
-                Color.argb(255, 0, 0, 175),
-                Color.argb(255, 0, 0, 200),
-                Color.argb(255, 0, 0, 225),
-                Color.argb(255, 0, 0, 250),
-                Color.argb(255, 50, 50, 250),
-                Color.argb(255, 100, 100, 250),
-                Color.argb(255, 150, 150, 250),
-                Color.argb(255, 200, 200, 250),
-        };
-        int noColumns = 10;
-        for (int i = 0; i < noColumns; i++) {
-            TextView view = new TextView(this);
-            view.setBackgroundColor(colors[i]);
-            view.setLayoutParams(new LinearLayout.LayoutParams(width/noColumns, LinearLayout.LayoutParams.MATCH_PARENT));
-            view.setText(i + "C");
-            view.setGravity(Gravity.CENTER_HORIZONTAL);
-            view.setPadding(0, height/(noColumns+1)*(noColumns-i), 0, 0);
-            weatherColumns.addView(view);
-        }
+        screenWidth = displayMetrics.widthPixels;
+        screenHeight = displayMetrics.heightPixels;
+        edgePadding = (int)Math.floor(screenHeight * 0.05);
     }
 
-    private void HideStatusAndActionBar() {
-        View decorView = getWindow().getDecorView();
-        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.hide();
-    }
-
-    View.OnClickListener refreshOnCLickListener = view -> {
+    private void refreshWeatherData() {
         Thread thread = new Thread(() -> {
             Log.d(this.getClass().getName(), "You pressed on refresh!: ");
-            GetLocationData();
-            String response = MakeRequest("GET",
-             "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=" + locLatitude +
-                     "&lon=" + locLongitude);
+            getLocationData();
+            String response = makeRequest("GET",
+                    "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=" + locLatitude +
+                            "&lon=" + locLongitude);
 
-            String weatherData = weatherPointsToString(parseTemperatures(response));
+            ArrayList<WeatherPoint> weatherPoints = parseTemperatures(response);
 
             runOnUiThread(() -> {
-                i++;
-                TextView data = findViewById(R.id.dataView);
-                data.setText("Hello hello " + i + "\n" + weatherData);
+                generateWeatherColumns(weatherPoints);
             });
 
         });
         thread.start();
-    };
-
-    private String weatherPointsToString(ArrayList<WeatherPoint> weatherPoints){
-        StringBuilder stringBuilder = new StringBuilder();
-        for ( WeatherPoint weatherPoint : weatherPoints) {
-            stringBuilder.append(weatherPoint.toString() + "\n");
-
-        }
-        return stringBuilder.toString();
     }
 
-
-    private ArrayList<WeatherPoint> parseTemperatures(String weatherResponse){
-        ArrayList<WeatherPoint> arrayWeatherPoints = new ArrayList<>();
-
-        try {
-            JSONObject jsonObject = new JSONObject(weatherResponse);
-            JSONArray timeseries = jsonObject.getJSONObject("properties").getJSONArray("timeseries");
-
-            for (int i = 0 ; i < timeseries.length() ; i++) {
-                JSONObject timePoint = timeseries.getJSONObject(i);
-                String time = timePoint.getString("time");
-                int temperature = timePoint.getJSONObject("data").getJSONObject("instant")
-                        .getJSONObject("details").getInt("air_temperature");
-                WeatherPoint weatherPoint = new WeatherPoint(time, temperature);
-                arrayWeatherPoints.add(weatherPoint);
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return arrayWeatherPoints;
-
-    }
-
-    private String GetLocationData() {
+    private String getLocationData() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -167,38 +101,38 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return "We need your location to give you weather";
         }
 
+        CancellationToken cancellationToken = new CancellationToken() {
+            @Override
+            public boolean isCancellationRequested() {
+                return false;
+            }
+
+            @Override
+            public CancellationToken onCanceledRequested(@NonNull OnTokenCanceledListener onTokenCanceledListener) {
+                return null;
+            }
+        };
+
         mFusedLocationClient.getCurrentLocation(100, cancellationToken)
-            .addOnSuccessListener(this, location -> {
-                if (location != null) {
-                    Log.d(this.getClass().getName(), "GetLocationData: Location is not null");
-                    locLatitude = location.getLatitude();
-                    locLongitude = location.getLongitude();
-                } else {
-                    Log.d(this.getClass().getName(), "GetLocationData: Location is null");
-                }
-            });
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        Log.d(this.getClass().getName(), "GetLocationData: Location is not null");
+                        locLatitude = location.getLatitude();
+                        locLongitude = location.getLongitude();
+                    } else {
+                        Log.d(this.getClass().getName(), "GetLocationData: Location is null");
+                    }
+                });
 
         return "Latitude: " + locLatitude + "\n" +
                 "Longitude: " + locLongitude;
     }
 
-    CancellationToken cancellationToken = new CancellationToken() {
-        @Override
-        public boolean isCancellationRequested() {
-            return false;
-        }
-
-        @Override
-        public CancellationToken onCanceledRequested(@NonNull OnTokenCanceledListener onTokenCanceledListener) {
-            return null;
-        }
-    };
-
-    private String MakeRequest(String method, String uri) {
+    private String makeRequest(String method, String uri) {
         try {
             URL url = new URL(uri);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -229,5 +163,44 @@ public class MainActivity extends AppCompatActivity {
             ex.printStackTrace();
             return ex.toString();
         }
+    }
+    private ArrayList<WeatherPoint> parseTemperatures(String weatherResponse){
+        ArrayList<WeatherPoint> arrayWeatherPoints = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(weatherResponse);
+            JSONArray timeseries = jsonObject.getJSONObject("properties").getJSONArray("timeseries");
+
+            for (int i = 0; i < noWeatherPoints; i++) {
+                JSONObject timePoint = timeseries.getJSONObject(i);
+                String time = timePoint.getString("time");
+                int temperature = timePoint.getJSONObject("data").getJSONObject("instant")
+                        .getJSONObject("details").getInt("air_temperature");
+                WeatherPoint weatherPoint = new WeatherPoint(this, time, temperature);
+                arrayWeatherPoints.add(weatherPoint);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return arrayWeatherPoints;
+
+    }
+
+    private void generateWeatherColumns(ArrayList<WeatherPoint> weatherPoints) {
+        for (int i = 0; i < noWeatherPoints; i++) {
+            weatherPoints.get(i).generateTemperatureTextView();
+            weatherColumns.addView(weatherPoints.get(i));
+        }
+    }
+
+    private String weatherPointsToString(ArrayList<WeatherPoint> weatherPoints){
+        StringBuilder stringBuilder = new StringBuilder();
+        for ( WeatherPoint weatherPoint : weatherPoints) {
+            stringBuilder.append(weatherPoint.toString() + "\n");
+
+        }
+        return stringBuilder.toString();
     }
 }
