@@ -1,13 +1,10 @@
 package com.example.weatherdisplay;
 
-import static com.example.weatherdisplay.MainActivity.noWeatherPoints;
 import static com.example.weatherdisplay.MainActivity.screenHeight;
-import static com.example.weatherdisplay.MainActivity.screenWidth;
-import static com.example.weatherdisplay.MainActivity.edgePadding;
+import static com.example.weatherdisplay.MainActivity.weatherColumnsHeight;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -22,6 +19,8 @@ public class WeatherPoint extends LinearLayout {
     static int minTemp = 100000;
     static int maxTemp = -100000;
     static int tempSpan;
+    int columnTotalTempSpan = 20;
+
 
     public WeatherPoint(Context context, String time, int temperature){
         super(context);
@@ -36,7 +35,7 @@ public class WeatherPoint extends LinearLayout {
         setOrientation(VERTICAL);
         setBackgroundColor(Color.BLUE);
         LayoutParams lp = new LayoutParams(
-                MainActivity.screenWidth/MainActivity.noColumnsInOneScreen,
+                MainActivity.screenWidth/MainActivity.noWeatherPointsInOneScreen,
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
         setLayoutParams(lp);
@@ -63,14 +62,16 @@ public class WeatherPoint extends LinearLayout {
         temperatureTextView.setBackgroundColor(Color.GREEN);
         this.addView(temperatureTextView);
 
-        int middle = screenHeight / 2;
 
-        int tempArea = screenHeight - 2 * edgePadding;
-        int a = temperatureTextView.getMeasuredHeight();
-        int singleTempHeight = Math.min(tempArea / tempSpan, 20);
-        int lower = middle - singleTempHeight * noWeatherPoints / 2;
-        int posY = screenHeight - (singleTempHeight * (temperature-minTemp) + edgePadding + lower);
-        temperatureTextView.setY(posY);
+        int middle = weatherColumnsHeight / 2;
+
+
+
+//        int tempArea = screenHeight - 2 * edgePadding;
+//        int singleTempHeight = Math.min(tempArea / tempSpan, 20);
+////        int lower = middle - singleTempHeight * noWeatherPoints / 2;
+//        int posY = screenHeight - (singleTempHeight * (temperature-minTemp) + edgePadding + lower);
+        temperatureTextView.setY(middle);
     }
 
     public String getTemperatureAsString(){

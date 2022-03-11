@@ -36,7 +36,9 @@ public class MainActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     LinearLayout weatherColumns;
-    static int noColumnsInOneScreen = 30;
+    static int weatherColumnsHeight;
+    static int noOfDays = 3;
+    static int noWeatherPointsInOneScreen = 18;
 
     static int screenWidth;
     static int screenHeight;
@@ -53,9 +55,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         weatherColumns = (LinearLayout) findViewById(R.id.WeatherColumns);
+        weatherColumnsHeight = weatherColumns.getHeight();
         FloatingActionButton refreshButton = (FloatingActionButton) findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(view -> {
             refreshWeatherData(); } );
+
+        noWeatherPoints = noOfDays * 24;
+
 
         calculateAllDistances();
 
