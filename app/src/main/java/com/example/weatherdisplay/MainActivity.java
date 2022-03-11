@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
@@ -30,14 +31,12 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    static int noWeatherPoints = 30;
-    private int i = 1;
-
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     LinearLayout weatherColumns;
     static int weatherColumnsHeight;
     static int noOfDays = 3;
+    static int noWeatherPoints; // Calculated from the number of days
     static int noWeatherPointsInOneScreen = 18;
 
     static int screenWidth;
@@ -55,19 +54,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         weatherColumns = (LinearLayout) findViewById(R.id.WeatherColumns);
-        weatherColumnsHeight = weatherColumns.getHeight();
         FloatingActionButton refreshButton = (FloatingActionButton) findViewById(R.id.refreshButton);
-        refreshButton.setOnClickListener(view -> {
-            refreshWeatherData(); } );
+        refreshButton.setOnClickListener(view -> { refreshWeatherData(false); } );
 
         noWeatherPoints = noOfDays * 24;
-
 
         calculateAllDistances();
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        refreshWeatherData();
+        refreshWeatherData(true);
     }
 
     private void calculateAllDistances() {
@@ -76,22 +72,30 @@ public class MainActivity extends AppCompatActivity {
         screenWidth = displayMetrics.widthPixels;
         screenHeight = displayMetrics.heightPixels;
         edgePadding = (int)Math.floor(screenHeight * 0.05);
+        GetScrollbarHeight();
     }
 
-    private void refreshWeatherData() {
+    private void GetScrollbarHeight() {
+        final ViewTreeObserver observer= weatherColumns.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(() -> weatherColumnsHeight = weatherColumns.getHeight());
+    }
+
+    private void refreshWeatherData(boolean getTestData) {
         Thread thread = new Thread(() -> {
-            Log.d(this.getClass().getName(), "You pressed on refresh!: ");
-            getLocationData();
-            String response = makeRequest("GET",
-                    "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=" + locLatitude +
-                            "&lon=" + locLongitude);
+            WeatherPoint.resetTemps();
 
-            //ArrayList<WeatherPoint> weatherPoints = parseTemperatures(response);
-            ArrayList<WeatherPoint> weatherPoints = GetTestWeatherPoints();
-            runOnUiThread(() -> {
-                generateWeatherColumns(weatherPoints);
-            });
+            ArrayList<WeatherPoint> weatherPoints;
+            if (getTestData) {
+                weatherPoints = GetTestWeatherPoints();
+            } else {
+                getLocationData();
+                String url = "https://api.met.no/weatherapi/locationforecast/2.0/compact";
+                String query = "?lat=" + locLatitude + "&lon=" + locLongitude;
+                String response = makeRequest("GET",url + query);
+                weatherPoints = parseTemperatures(response);
+            }
 
+            runOnUiThread(() -> { generateWeatherColumns(weatherPoints); });
         });
         thread.start();
     }
@@ -143,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
             URL url = new URL(uri);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(method);
-            connection.setRequestProperty("User-Agent", "WeatherDisplay/0.5 https://github.com/jeppei/WeatherDisplay");
+            connection.setRequestProperty("User-Agent", "WeatherDisplay/0.5 https://github.com/EmmaAmnesten/WeatherDisplay");
 
             int statusCode = connection.getResponseCode();
             InputStream responseStream;
@@ -176,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             JSONObject jsonObject = new JSONObject(weatherResponse);
             JSONArray timeseries = jsonObject.getJSONObject("properties").getJSONArray("timeseries");
-
             for (int i = 0; i < noWeatherPoints; i++) {
                 JSONObject timePoint = timeseries.getJSONObject(i);
                 String time = timePoint.getString("time");
@@ -195,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void generateWeatherColumns(ArrayList<WeatherPoint> weatherPoints) {
+        weatherColumns.removeAllViews();
         for (int i = 0; i < noWeatherPoints; i++) {
             weatherPoints.get(i).generateTemperatureTextView();
             weatherColumns.addView(weatherPoints.get(i));
@@ -213,7 +217,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<WeatherPoint> GetTestWeatherPoints() {
         ArrayList<WeatherPoint> weatherPoints = new ArrayList<WeatherPoint>();
         for (int i = 0; i < noWeatherPoints; i++) {
-            weatherPoints.add(new WeatherPoint(this, String.valueOf(i), i));
+            String hh = String.format("%02d", i);
+            weatherPoints.add(new WeatherPoint(this, "YYYY-MM-DDT" + hh + ":00", i));
         }
         return weatherPoints;
     }
