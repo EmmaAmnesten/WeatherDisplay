@@ -2,11 +2,17 @@ package com.example.weatherdisplay;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     LinearLayout weatherColumns;
+    TextView locationTextView;
+
     static int weatherColumnsHeight;
     static int noOfDays = 3;
     static int noWeatherPoints; // Calculated from the number of days
@@ -45,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
     double locLatitude = 0;
     double locLongitude = 0;
+    static int skyBlue = Color.argb(255, 0, 170, 255);
+    static int nightBlue = Color.argb(255, 0, 151, 237);
 
     FusedLocationProviderClient mFusedLocationClient;
 
@@ -53,8 +63,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        weatherColumns = (LinearLayout) findViewById(R.id.WeatherColumns);
-        FloatingActionButton refreshButton = (FloatingActionButton) findViewById(R.id.refreshButton);
+        getWindow().getDecorView().setBackgroundColor(skyBlue);
+
+        locationTextView = findViewById(R.id.LocationTextView);
+        locationTextView.setTextColor(Color.WHITE);
+        weatherColumns = findViewById(R.id.WeatherColumns);
+        FloatingActionButton refreshButton = findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(view -> { refreshWeatherData(false); } );
 
         noWeatherPoints = noOfDays * 24;
@@ -133,6 +147,8 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(this.getClass().getName(), "GetLocationData: Location is not null");
                         locLatitude = location.getLatitude();
                         locLongitude = location.getLongitude();
+
+                        LocationAddress.getAddressFromLocation(locLatitude, locLongitude, this, new GeocoderHandler());
                     } else {
                         Log.d(this.getClass().getName(), "GetLocationData: Location is null");
                     }
@@ -183,9 +199,16 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < noWeatherPoints; i++) {
                 JSONObject timePoint = timeseries.getJSONObject(i);
                 String time = timePoint.getString("time");
-                int temperature = timePoint.getJSONObject("data").getJSONObject("instant")
-                        .getJSONObject("details").getInt("air_temperature");
-                WeatherPoint weatherPoint = new WeatherPoint(this, time, temperature);
+                JSONObject data = timePoint.getJSONObject("data");
+                int temperature = data.getJSONObject("instant").getJSONObject("details")
+                        .getInt("air_temperature");
+
+                String weatherIcon = "(none)";
+                if (data.has("next_1_hours")) {
+                    weatherIcon = data.getJSONObject("next_1_hours").getJSONObject("summary")
+                            .getString("symbol_code");
+                }
+                WeatherPoint weatherPoint = new WeatherPoint(this, time, temperature, weatherIcon);
                 arrayWeatherPoints.add(weatherPoint);
             }
 
@@ -200,9 +223,19 @@ public class MainActivity extends AppCompatActivity {
     private void generateWeatherColumns(ArrayList<WeatherPoint> weatherPoints) {
         weatherColumns.removeAllViews();
         for (int i = 0; i < noWeatherPoints; i++) {
+            View hourSeparator = CreateHourSeparator(weatherPoints.get(i));
+            weatherColumns.addView(hourSeparator);
             weatherPoints.get(i).generateTemperatureTextView();
             weatherColumns.addView(weatherPoints.get(i));
         }
+    }
+
+    private View CreateHourSeparator(WeatherPoint weatherPoint) {
+        View hourSeparator = new View(this);
+        hourSeparator.setLayoutParams(new LinearLayout.LayoutParams(2, ViewGroup.LayoutParams.MATCH_PARENT));
+        int color = weatherPoint.displayedTime.equals("01") ? Color.WHITE : nightBlue;
+        hourSeparator.setBackgroundColor(color);
+        return hourSeparator;
     }
 
     private String weatherPointsToString(ArrayList<WeatherPoint> weatherPoints){
@@ -218,8 +251,25 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<WeatherPoint> weatherPoints = new ArrayList<WeatherPoint>();
         for (int i = 0; i < noWeatherPoints; i++) {
             String hh = String.format("%02d", i);
-            weatherPoints.add(new WeatherPoint(this, "YYYY-MM-DDT" + hh + ":00", i));
+            weatherPoints.add(new WeatherPoint(this, "YYYY-MM-DDT" + hh + ":00", i, "hot"));
         }
         return weatherPoints;
+    }
+
+    private class GeocoderHandler extends Handler {
+        @Override
+        public void handleMessage(Message message) {
+            String locationAddress;
+            switch (message.what) {
+                case 1:
+                    Bundle bundle = message.getData();
+                    locationAddress = bundle.getString("address");
+                    break;
+                default:
+                    locationAddress = null;
+            }
+
+            locationTextView.setText(locationAddress);
+        }
     }
 }

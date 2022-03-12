@@ -1,16 +1,22 @@
 package com.example.weatherdisplay;
 
+import static com.example.weatherdisplay.MainActivity.skyBlue;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class WeatherPoint extends LinearLayout {
 
     public String time;
+    public String displayedTime;
     public int temperature;
+    public String weatherIcon;
     private TextView temperatureTextView;
     private TextView timeTextView;
 
@@ -18,18 +24,19 @@ public class WeatherPoint extends LinearLayout {
     static int maxTemp = -100000;
     static int tempSpan;
 
-    public WeatherPoint(Context context, String time, int temperature){
+    public WeatherPoint(Context context, String time, int temperature, String weatherIcon){
         super(context);
 
-        this.time = time;
         this.temperature = temperature;
+        this.weatherIcon = weatherIcon;
+        this.time = time;
+        displayedTime = time.substring(11, 13);
 
         minTemp = Math.min(minTemp, temperature);
         maxTemp = Math.max(maxTemp, temperature);
         tempSpan = maxTemp - minTemp;
 
         setOrientation(VERTICAL);
-        setBackgroundColor(Color.BLUE);
         LayoutParams lp = new LayoutParams(
                 MainActivity.screenWidth/MainActivity.noWeatherPointsInOneScreen,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -38,9 +45,9 @@ public class WeatherPoint extends LinearLayout {
 
         timeTextView = new TextView(this.getContext());
         timeTextView.setGravity(Gravity.CENTER);
-        timeTextView.setText(time.substring(11, 16));
+        timeTextView.setText(displayedTime);
         timeTextView.setTextSize(10);
-        timeTextView.setBackgroundColor(Color.YELLOW);
+        timeTextView.setTextColor(Color.WHITE);
         timeTextView.setY(0);
         timeTextView.measure(0, 0);
         this.addView(timeTextView);
@@ -55,9 +62,10 @@ public class WeatherPoint extends LinearLayout {
         temperatureTextView = new TextView(this.getContext());
         temperatureTextView.setGravity(Gravity.CENTER);
         temperatureTextView.setText(getTemperatureAsString());
-        temperatureTextView.setBackgroundColor(Color.GREEN);
-        temperatureTextView.measure(0, 0);
+        //temperatureTextView.setText(getTemperatureAsString() + "\n" + weatherIcon);
+        temperatureTextView.setTextColor(Color.WHITE);
 
+        temperatureTextView.measure(0, 0);
         int tempTextViewHeight = temperatureTextView.getMeasuredHeight();
         int timeTextViewHeight = timeTextView.getMeasuredHeight();
 
