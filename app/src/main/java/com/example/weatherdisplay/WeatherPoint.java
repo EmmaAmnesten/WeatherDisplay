@@ -1,9 +1,8 @@
 package com.example.weatherdisplay;
 
-import static com.example.weatherdisplay.MainActivity.skyBlue;
-
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +15,11 @@ public class WeatherPoint extends LinearLayout {
     public String time;
     public String displayedTime;
     public int temperature;
-    public String weatherIcon;
+    public String weatherIconAsString;
+    private ImageView weatherIconImageView;
     private TextView temperatureTextView;
     private TextView timeTextView;
+    private LinearLayout weatherDataLinearLayout;
 
     static int minTemp = 100000;
     static int maxTemp = -100000;
@@ -28,7 +29,7 @@ public class WeatherPoint extends LinearLayout {
         super(context);
 
         this.temperature = temperature;
-        this.weatherIcon = weatherIcon;
+        this.weatherIconAsString = weatherIcon;
         this.time = time;
         displayedTime = time.substring(11, 13);
 
@@ -62,21 +63,39 @@ public class WeatherPoint extends LinearLayout {
         temperatureTextView = new TextView(this.getContext());
         temperatureTextView.setGravity(Gravity.CENTER);
         temperatureTextView.setText(getTemperatureAsString());
-        //temperatureTextView.setText(getTemperatureAsString() + "\n" + weatherIcon);
         temperatureTextView.setTextColor(Color.WHITE);
 
-        temperatureTextView.measure(0, 0);
-        int tempTextViewHeight = temperatureTextView.getMeasuredHeight();
+        weatherIconImageView = new ImageView(this.getContext());
+        View v = new ImageView(this.getContext());
+        weatherIconImageView.setImageDrawable(v.getResources().getDrawable(R.drawable.sun));
+        //weatherIconImageView.setBackgroundColor(Color.GREEN);
+        weatherIconImageView.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        //weatherIconImageView.setScaleType(ImageView.ScaleType.FIT_START);
+        //weatherIconImageView.setAdjustViewBounds(true);
+        //weatherDataLinearLayout.setBackgroundColor(Color.BLUE);
+
+        //weatherIconImageView.setOutlineAmbientShadowColor(Color.YELLOW);
+        //weatherIconImageView.setOutlineSpotShadowColor(Color.RED);
+
+        weatherDataLinearLayout = new LinearLayout(getContext());
+        weatherDataLinearLayout.setOrientation(VERTICAL);
+
+        weatherDataLinearLayout.addView(weatherIconImageView);
+        weatherDataLinearLayout.addView(temperatureTextView);
+
+        weatherDataLinearLayout.measure(0, 0);
+        int weatherDataHeight = weatherDataLinearLayout.getMeasuredHeight();
         int timeTextViewHeight = timeTextView.getMeasuredHeight();
 
         // subtract one tempTextViewHeight to not make the bottommost temp below the scroll view
-        double totalHeight = MainActivity.weatherColumnsHeight - tempTextViewHeight - timeTextViewHeight;
+        double totalHeight = MainActivity.weatherColumnsHeight - weatherDataHeight - timeTextViewHeight;
 
         double singleTempHeight = totalHeight / tempSpan;
         double posY = totalHeight - (temperature-minTemp) * singleTempHeight;
-        temperatureTextView.setY(Math.round(posY));
+        weatherDataLinearLayout.setY(Math.round(posY));
 
-        this.addView(temperatureTextView);
+        this.addView(weatherDataLinearLayout);
+
     }
 
     public String getTemperatureAsString(){
@@ -99,4 +118,13 @@ public class WeatherPoint extends LinearLayout {
             Color.argb(255, 150, 150, 250),
             Color.argb(255, 200, 200, 250),
     };
+
+    //private Drawable GetImageWeatherIcon() {
+    //    View v = new ImageView(this.getContext());
+    //    int drawableNumber = 0;
+    //    switch (weatherIconAsString) {
+    //        case "cloudy": return drawableNumber = R.drawable.ic_cloudy); break;
+    //        case "fair_day": return v.getResources().getDrawable(R.drawable.ic_fair_day); break;
+    //    }
+    // }
 }
