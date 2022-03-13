@@ -53,8 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
     double locLatitude = 0;
     double locLongitude = 0;
-    static int skyBlue = Color.argb(255, 0, 170, 255);
-    static int nightBlue = Color.argb(255, 0, 151, 237);
+    static int dayBlue = Color.argb(255, 0, 170, 255);
+    static int nightBlue = Color.argb(255, 4, 142, 233);
+    static int separatorBlue = Color.argb(255, 0, 151, 237);
 
     FusedLocationProviderClient mFusedLocationClient;
 
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getWindow().getDecorView().setBackgroundColor(skyBlue);
+        getWindow().getDecorView().setBackgroundColor(dayBlue);
 
         locationTextView = findViewById(R.id.LocationTextView);
         locationTextView.setTextColor(Color.WHITE);
@@ -195,22 +196,22 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             JSONObject jsonObject = new JSONObject(weatherResponse);
-            JSONArray timeseries = jsonObject.getJSONObject("properties").getJSONArray("timeseries");
+            JSONArray timeSeries = jsonObject.getJSONObject("properties").getJSONArray("timeseries");
             for (int i = 0; i < noWeatherPoints; i++) {
-                JSONObject timePoint = timeseries.getJSONObject(i);
+                JSONObject timePoint = timeSeries.getJSONObject(i);
                 String time = timePoint.getString("time");
                 JSONObject data = timePoint.getJSONObject("data");
                 int temperature = data.getJSONObject("instant").getJSONObject("details")
                         .getInt("air_temperature");
 
-                String weatherIcon = "(none)";
                 if (data.has("next_1_hours")) {
-                    weatherIcon = data.getJSONObject("next_1_hours").getJSONObject("summary")
+                    String weatherIcon = data.getJSONObject("next_1_hours").getJSONObject("summary")
                             .getString("symbol_code");
+                    WeatherPoint weatherPoint = new WeatherPoint(this, time, temperature, weatherIcon);
+                    arrayWeatherPoints.add(weatherPoint);
                 }
-                WeatherPoint weatherPoint = new WeatherPoint(this, time, temperature, weatherIcon);
-                arrayWeatherPoints.add(weatherPoint);
             }
+            noWeatherPoints = arrayWeatherPoints.size();
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -233,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
     private View CreateHourSeparator(WeatherPoint weatherPoint) {
         View hourSeparator = new View(this);
         hourSeparator.setLayoutParams(new LinearLayout.LayoutParams(2, ViewGroup.LayoutParams.MATCH_PARENT));
-        int color = weatherPoint.displayedTime.equals("01") ? Color.WHITE : nightBlue;
+        int color = weatherPoint.displayedTime.equals("01") ? Color.WHITE : separatorBlue;
         hourSeparator.setBackgroundColor(color);
         return hourSeparator;
     }
@@ -251,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<WeatherPoint> weatherPoints = new ArrayList<WeatherPoint>();
         for (int i = 0; i < noWeatherPoints; i++) {
             String hh = String.format("%02d", i);
-            weatherPoints.add(new WeatherPoint(this, "YYYY-MM-DDT" + hh + ":00", i, "hot"));
+            weatherPoints.add(new WeatherPoint(this, "YYYY-MM-DDT" + hh + ":00", i, "cloudy"));
         }
         return weatherPoints;
     }
