@@ -78,7 +78,8 @@ public class MainActivity extends AppCompatActivity {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        refreshWeatherData(true);
+        refreshWeatherData(false);
+        startAutoRefresh();
     }
 
     private void calculateAllDistances() {
@@ -272,5 +273,21 @@ public class MainActivity extends AppCompatActivity {
 
             locationTextView.setText(locationAddress);
         }
+    }
+
+    final Handler timerHandler = new Handler();
+    Runnable updater;
+    void startAutoRefresh() {
+        updater = () -> {
+            refreshWeatherData(false);
+            int time = 1000*60*30; // every 30min
+            timerHandler.postDelayed(updater,time);
+        };
+        timerHandler.post(updater);
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        timerHandler.removeCallbacks(updater);
     }
 }
