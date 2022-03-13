@@ -54,17 +54,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@android:drawable/stat_notify_sync" />
 
-    <ImageButton
-        android:id="@+id/locationButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="16dp"
-        android:src="@android:drawable/ic_menu_mylocation"
-        android:text="Get location"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <TextView
         android:id="@+id/LocationTextView"
         android:layout_width="wrap_content"

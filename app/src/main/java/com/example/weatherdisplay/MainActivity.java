@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -146,13 +145,10 @@ public class MainActivity extends AppCompatActivity {
         mFusedLocationClient.getCurrentLocation(100, cancellationToken)
                 .addOnSuccessListener(this, location -> {
                     if (location != null) {
-                        Log.d(this.getClass().getName(), "GetLocationData: Location is not null");
                         locLatitude = location.getLatitude();
                         locLongitude = location.getLongitude();
 
                         LocationAddress.getAddressFromLocation(locLatitude, locLongitude, this, new GeocoderHandler());
-                    } else {
-                        Log.d(this.getClass().getName(), "GetLocationData: Location is null");
                     }
                 });
 
