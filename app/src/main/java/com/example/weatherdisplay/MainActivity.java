@@ -1,6 +1,8 @@
 package com.example.weatherdisplay;
 
 import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -50,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
     static int screenHeight;
     static int edgePadding; // Padding at the top and bottom of the screen
 
-    double locLatitude = 0;
-    double locLongitude = 0;
+    double locLatitude;
+    double locLongitude;
     static int dayBlue = Color.argb(255, 0, 170, 255);
     static int nightBlue = Color.argb(255, 4, 142, 233);
     static int separatorBlue = Color.argb(255, 0, 151, 237);
@@ -69,7 +72,9 @@ public class MainActivity extends AppCompatActivity {
         locationTextView.setTextColor(Color.WHITE);
         weatherColumns = findViewById(R.id.WeatherColumns);
         FloatingActionButton refreshButton = findViewById(R.id.refreshButton);
-        refreshButton.setOnClickListener(view -> { refreshWeatherData(false); } );
+        refreshButton.setOnClickListener(view -> {
+            refreshWeatherData(false);
+        });
 
         noWeatherPoints = noOfDays * 24;
 
@@ -77,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        refreshWeatherData(false);
+        getLocationData();
+        //refreshWeatherData(false);
         startAutoRefresh();
     }
 
@@ -86,14 +92,15 @@ public class MainActivity extends AppCompatActivity {
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         screenWidth = displayMetrics.widthPixels;
         screenHeight = displayMetrics.heightPixels;
-        edgePadding = (int)Math.floor(screenHeight * 0.05);
+        edgePadding = (int) Math.floor(screenHeight * 0.05);
         GetScrollbarHeight();
     }
 
     private void GetScrollbarHeight() {
-        final ViewTreeObserver observer= weatherColumns.getViewTreeObserver();
+        final ViewTreeObserver observer = weatherColumns.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(() -> weatherColumnsHeight = weatherColumns.getHeight());
     }
+
 
     private void refreshWeatherData(boolean getTestData) {
         Thread thread = new Thread(() -> {
@@ -103,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             if (getTestData) {
                 weatherPoints = GetTestWeatherPoints();
             } else {
-                getLocationData();
+                //getLocationData();
                 String url = "https://api.met.no/weatherapi/locationforecast/2.0/compact";
                 String query = "?lat=" + locLatitude + "&lon=" + locLongitude;
                 String response = makeRequest("GET",url + query);
@@ -147,13 +154,33 @@ public class MainActivity extends AppCompatActivity {
                     if (location != null) {
                         locLatitude = location.getLatitude();
                         locLongitude = location.getLongitude();
-
                         LocationAddress.getAddressFromLocation(locLatitude, locLongitude, this, new GeocoderHandler());
+                        refreshWeatherData(false);
+                    }else{
+                        noLocation();
                     }
                 });
 
-        return "Latitude: " + locLatitude + "\n" +
-                "Longitude: " + locLongitude;
+        return "?lat=" + locLatitude + "&lon=" + locLongitude;
+        //return "Latitude: " + locLatitude + "\n" + "Longitude: " + locLongitude;
+    }
+
+    private void noLocation(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
     }
 
     private String makeRequest(String method, String uri) {

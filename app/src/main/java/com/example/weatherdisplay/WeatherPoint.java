@@ -2,6 +2,7 @@ package com.example.weatherdisplay;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,9 @@ public class WeatherPoint extends LinearLayout {
     static int maxTemp = -100000;
     static int tempSpan;
 
+    int minOfTotalTemp = 20;
+    int extraSpans;
+
     public WeatherPoint(Context context, String time, int temperature, String weatherIcon){
         super(context);
 
@@ -38,6 +42,24 @@ public class WeatherPoint extends LinearLayout {
         minTemp = Math.min(minTemp, temperature);
         maxTemp = Math.max(maxTemp, temperature);
         tempSpan = maxTemp - minTemp;
+        if(tempSpan < minOfTotalTemp){
+            extraSpans = minOfTotalTemp - tempSpan;
+
+            //something wrong if first weatherPoints is 0.
+            int extraSpanDivided = extraSpans / 6;
+            if(minTemp < -10){
+                extraSpans = extraSpanDivided;
+            }else if(minTemp < 0){
+                extraSpans = extraSpanDivided * 2;
+            }else if(minTemp > 20){
+                extraSpans = extraSpanDivided * 5;
+            }else if(minTemp > 10){
+                extraSpans = extraSpanDivided * 4;
+            }else if(minTemp >= 0){
+                extraSpans = extraSpanDivided * 3;
+            }
+            tempSpan = minOfTotalTemp;
+        }
 
         setOrientation(VERTICAL);
         LayoutParams lp = new LayoutParams(
@@ -100,7 +122,7 @@ public class WeatherPoint extends LinearLayout {
         double totalHeight = MainActivity.weatherColumnsHeight - weatherDataHeight - timeTextViewHeight;
 
         double singleTempHeight = totalHeight / tempSpan;
-        return totalHeight - (temperature-minTemp) * singleTempHeight;
+        return totalHeight - ((temperature-minTemp) * singleTempHeight) - (singleTempHeight * extraSpans);
     }
 
     public String getTemperatureAsString(){
