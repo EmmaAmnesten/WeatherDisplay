@@ -2,7 +2,6 @@ package com.example.weatherdisplay;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +20,7 @@ public class WeatherPoint extends LinearLayout {
     public String weatherIconAsString;
     private ImageView weatherIconImageView;
     private TextView temperatureTextView;
-    private TextView timeTextView;
+    private final TextView timeTextView;
     private LinearLayout weatherDataLinearLayout;
 
     static int minTemp = 100000;
@@ -68,7 +67,7 @@ public class WeatherPoint extends LinearLayout {
         );
         setLayoutParams(lp);
         if (22 <= Integer.parseInt(displayedTime) || Integer.parseInt(displayedTime) <= 7) {
-            this.setBackgroundColor(MainActivity.nightBlue);
+            this.setBackgroundColor(GlobalVariables.nightBlue);
         }
 
         timeTextView = new TextView(this.getContext());
