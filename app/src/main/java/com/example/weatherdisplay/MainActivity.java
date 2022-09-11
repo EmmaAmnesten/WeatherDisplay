@@ -266,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void generateWeatherColumns(ArrayList<WeatherPoint> weatherPoints) {
         weatherColumns.removeAllViews();
-        for (int i = 0; i < noWeatherPoints; i++) {
+        for (int i = 0; i < weatherPoints.size(); i++) {
             View hourSeparator = CreateHourSeparator(weatherPoints.get(i));
             weatherColumns.addView(hourSeparator);
             weatherPoints.get(i).generateTemperatureTextView();
