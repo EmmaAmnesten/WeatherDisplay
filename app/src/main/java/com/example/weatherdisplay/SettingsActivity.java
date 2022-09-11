@@ -16,7 +16,7 @@ public class SettingsActivity extends AppCompatActivity {
         getWindow().getDecorView().setBackgroundColor(GlobalVariables.dayBlue);
 
         Switch mySwitch = findViewById(R.id.switch1);
-        mySwitch.setChecked(GlobalVariables.mySwitch);
+        mySwitch.setChecked(GlobalVariables.useFullHeight);
 
         Button saveSettingsButton = findViewById(R.id.saveSettingsButton);
         saveSettingsButton.setOnClickListener(view -> {
@@ -27,7 +27,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void switchListener() {
         Switch mySwitch = findViewById(R.id.switch1);
-        GlobalVariables.mySwitch = mySwitch.isChecked();
+        GlobalVariables.useFullHeight = mySwitch.isChecked();
         System.out.println(mySwitch.isChecked());
     }
 }

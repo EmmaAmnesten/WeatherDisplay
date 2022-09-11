@@ -1,7 +1,5 @@
 package com.example.weatherdisplay;
 
-import static android.provider.AlarmClock.EXTRA_MESSAGE;
-
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,22 +9,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -116,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshWeatherData(boolean getTestData) {
 
-        System.out.println(GlobalVariables.mySwitch);
         Thread thread = new Thread(() -> {
             WeatherPoint.resetTemps();
 

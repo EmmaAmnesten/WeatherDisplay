@@ -44,20 +44,22 @@ public class WeatherPoint extends LinearLayout {
         if(tempSpan < minOfTotalTemp){
             extraSpans = minOfTotalTemp - tempSpan;
 
-            //something wrong if first weatherPoints is 0.
-            int extraSpanDivided = extraSpans / 6;
-            if(minTemp < -10){
-                extraSpans = extraSpanDivided;
-            }else if(minTemp < 0){
-                extraSpans = extraSpanDivided * 2;
-            }else if(minTemp > 20){
-                extraSpans = extraSpanDivided * 5;
-            }else if(minTemp > 10){
-                extraSpans = extraSpanDivided * 4;
-            }else if(minTemp >= 0){
-                extraSpans = extraSpanDivided * 3;
+            if (!GlobalVariables.useFullHeight) {
+                //something wrong if first weatherPoints is 0.
+                int extraSpanDivided = extraSpans / 6;
+                if (minTemp < -10) {
+                    extraSpans = extraSpanDivided;
+                } else if (minTemp < 0) {
+                    extraSpans = extraSpanDivided * 2;
+                } else if (minTemp > 20) {
+                    extraSpans = extraSpanDivided * 5;
+                } else if (minTemp > 10) {
+                    extraSpans = extraSpanDivided * 4;
+                } else if (minTemp >= 0) {
+                    extraSpans = extraSpanDivided * 3;
+                }
+                tempSpan = minOfTotalTemp;
             }
-            tempSpan = minOfTotalTemp;
         }
 
         setOrientation(VERTICAL);
@@ -121,7 +123,12 @@ public class WeatherPoint extends LinearLayout {
         double totalHeight = MainActivity.weatherColumnsHeight - weatherDataHeight - timeTextViewHeight;
 
         double singleTempHeight = totalHeight / tempSpan;
-        return totalHeight - ((temperature-minTemp) * singleTempHeight) - (singleTempHeight * extraSpans);
+
+        if (GlobalVariables.useFullHeight) {
+            return totalHeight - (temperature - minTemp) * singleTempHeight;
+        } else {
+            return totalHeight - ((temperature - minTemp) * singleTempHeight) - (singleTempHeight * extraSpans);
+        }
     }
 
     public String getTemperatureAsString(){
